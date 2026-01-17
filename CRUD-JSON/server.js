@@ -85,6 +85,27 @@ const server = http.createServer((req,res) => {
     return;
   }
 
+  if (method === "PATCH" && url.startsWith("/users/")) {
+    const id = Number(url.split("/").pop());
+    let body = "";
+
+    req.on("data", chunk => body += chunk);
+    req.on("end", () => {
+      const payload = JSON.parse(body);
+      const data = readData();
+      const index = data.findIndex(u => u.id === id);
+
+      if (index === -1) return send(res, 404, { message: "User not found" });
+
+      if (payload.name !== undefined) data[index].name = payload.name;
+      if (payload.role !== undefined) data[index].role = payload.role;
+
+      writeData(data);
+      return send(res, 200, data[index]);
+    });
+    return;
+  }
+
   if (method === "DELETE" && url.startsWith("/users/")) {
     const id = Number(url.split("/").pop());
     const data = readData();
